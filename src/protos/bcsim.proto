@@ -1,0 +1,182 @@
+syntax = "proto2";
+
+package test;
+
+import "google/protobuf/timestamp.proto";
+
+option java_package = "de.tum.i11.bcsim.proto";
+option java_outer_classname = "Messages";
+option optimize_for = SPEED;
+
+
+// Compile using:
+// protoc --java_out=src/main/java src/protos/bcsim.proto
+
+// Messages sent between coordinators
+message CoordinatorMessage {
+
+    optional AssignNodes assignNodes = 1;
+    optional NodesAssigned nodesAssigned = 2;
+    optional InitP2POverlay initP2P = 3;
+    optional ConsensusNodes consensusNodes = 4;
+    optional P2PReady ready = 5;
+    optional Start start = 6;
+    optional Stop stop = 7;
+    optional Result result = 8;
+
+    optional Graphviz graph = 9;
+}
+
+// Orchestrator signals Coordinator to initialize peers within the given (inclusive) ID range
+message AssignNodes {
+    required int32 from = 1;
+    required int32 to = 2;
+}
+
+// Coordinator informs Orchestrator of the initialized peers and their IP addresses
+message NodesAssigned {
+    repeated Node node = 1;
+}
+// Mapping of node ID to IP address
+message Node {
+    required int32 nodeId = 1;
+    required string address = 2;
+}
+
+// Orchestrator sends network graph as an adjacency list and a mapping of node IDs to IP addresses
+message InitP2POverlay {
+    repeated Node node = 1;
+    repeated Edge adjacency = 2;
+}
+message Edge {
+    required int32 node = 1; // from node
+    repeated Latency edge = 2; // list of edges
+}
+message Latency {
+    required int32 to = 1; // to node
+    required int32 latency = 2; // latency to node
+}
+
+// In case of DPoS: Orchestrator informs other Coordinators of the selected consensus nodes
+message ConsensusNodes {
+    repeated int32 node = 1;
+}
+
+// Coordinator signals Orchestrator that its side of the P2P network is ready
+message P2PReady {
+}
+
+// Orchestrator signals other Coordinators to start
+message Start {
+    required int64 time = 1; // when to start
+}
+
+// Coordinator tells other Coordinator to stop with the given reason (may be relayed)
+message Stop {
+    required string initiator = 1;
+    required string reason = 2;
+    required bool fatal = 3;
+}
+
+// Coordinator delivers results to Orchestrator
+message Result {
+    required string coordAddress = 1;
+    required double maxCPULoad = 2;
+    required double avgCPULoad = 3;
+    repeated ResultEntry entry = 4;
+
+}
+message ResultEntry {
+    required int32 nodeId = 1;
+    required int32 poolSize = 2;
+    required int32 orphans = 3;
+    required double createdBlocksPerSec = 4;
+    required int32 createdBlocks = 5;
+    required double createdTxPerSec = 6;
+    required int32 createdTx = 7;
+    required double confirmedBlocksPerSec = 8;
+    required double confirmedTxPerSec = 9;
+    required double confirmedBytesPerSec = 10;
+    required double totalBlocksPerSec = 11;
+    required double totalTxPerSec = 12;
+    required int32 unconfirmedTx = 13;
+    repeated TxLatencyResult txLatency = 14;
+}
+message TxLatencyResult {
+    required int32 size = 1;
+    required double latency = 2;
+    required double fee = 3;
+}
+
+// Deprecated: to send string representation of a graph
+message Graphviz {
+    required string graph = 1;
+}
+
+
+
+
+
+// Messages sent between emulated peers
+message P2PMessage {
+    // Init:
+    optional AnnouncePeer announce = 1;
+    optional Latency latency = 2;
+
+    // Blockchain emulation:
+    optional Inventory inv = 3;
+    optional GetData getData = 4;
+    optional Block block = 5;
+    optional Transaction transaction = 6;
+
+    // DPoS only:
+    optional BlockProposal proposal = 7;
+    optional BlockAck ack = 8;
+}
+
+// Peer tells other peer who they are (node ID)
+message AnnouncePeer {
+    required int32 nodeId = 1;
+}
+
+// BlockchainPeer informs other BlockchainPeer of a new block in their inventory
+message Inventory {
+    required int32 sender = 1;
+    required int32 id = 2;
+}
+
+// BlockchainPeer requests block with the given ID from other BlockchainPeer
+message GetData {
+    required int32 sender = 1;
+    required int32 id = 2;
+}
+
+// Gossiped transaction
+message Transaction {
+    required int32 txId = 1;
+    required int32 txFee = 2;
+    required google.protobuf.Timestamp ts = 3;
+    optional bytes data = 4;
+}
+
+// Gossiped block
+message Block {
+    required int32 blockId = 1;
+    required int32 parentId = 2;
+    required int32 creator = 3;
+    required google.protobuf.Timestamp ts = 4;
+    repeated Transaction transaction = 5;
+}
+
+// DPoS BP proposes Block to other BPs
+message BlockProposal {
+    required Block block = 1;
+}
+
+// BP acknowledges BlockProposal of block with the given ID
+message BlockAck {
+    required int32 blockId = 1;
+}
+
+// Compile using:
+// protoc --java_out=src/main/java src/protos/bcsim.proto

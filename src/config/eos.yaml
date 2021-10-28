@@ -1,0 +1,134 @@
+########################################################################################################################
+#
+#   COORDINATORS
+#
+#   List of addresses <ip:port> and computing power shares of physical machines hosting the coordinators.
+#
+########################################################################################################################
+
+coordinators:
+  - address: 127.0.0.1:5151
+    computingShare: 1
+#  - address: 192.168.0.124:5151
+#    computingShare: 65
+#  - address: 192.168.0.179:5152
+#    computingShare: 44
+#  - address: 192.168.0.154:5153
+#    computingShare: 39
+
+
+
+
+
+########################################################################################################################
+#
+#   NETWORK STRATEGIES
+#
+#   Defines the number of peers and their connections in the P2P network. Peers in the network are identified by their
+#   Ids (0 to n-1).
+#
+#   - RANDOM: creates a P2P network according to a random graph with the given number of nodes,
+#             edge density and mean edge latency (application level).
+#
+#   - EXPLICIT: creates a P2P network according to the given adjacency list. The resulting graph must be connected
+#               and undirected (only one entry per edge allowed). The given adjacency list must contain entries for
+#               all node ids from 0 to n-1 where n is the number of nodes.
+#
+#   - SCALEFREE: creates a scale-free P2P network according to the Barabási–Albert model.
+#
+########################################################################################################################
+
+
+random:
+  nodes: 500  # number of peers in the network
+  density: 0.01 # density of edges. As the graph has to be connected, the actual density will be: max(2/nodes, density)
+  latency: 63000 # latency mean
+  perEdge: false # true - latency will be applied to each edge, false - latency is the mean propagation delay in the entire network
+  bandwidth: 2000 # MB/s
+
+explicit:
+  bandwidth: 2000 # MB/s
+  fileName: cloudGraph.txt
+  peers:
+    - id: 0
+      edges: [{id: 1, latency: 10}, {id: 2, latency: 20}]
+    - id: 1
+      edges: [{id: 2, latency: 20}]
+    - id: 2
+      edges: []
+
+scaleFree:
+  nodes: 100  # number of peers in the network
+  m: 2 # number of edges new nodes are added with initially
+  latency: 63000 # latency mean
+  perEdge: false # true - latency will be applied to each edge, false - latency is the mean propagation delay in the entire network
+  bandwidth: 2000 # MB/s
+
+
+
+
+########################################################################################################################
+#
+#   BLOCKCHAIN STRATEGIES
+#
+########################################################################################################################
+
+dPoSBFT:
+  #consensusNodes: [1, 3, 6]
+  consensusNodeNum: 21 # nodes are selected automatically by highest network degree
+  nodeSelection: best # worst, random, best
+  blocksPerNode: 12 # block created by each block producer in a row
+  skipLastBlocks: 0 # final blocks to be discarded by each BP (actual blocks created per BP = blocksPerNode-skipLastBlocks
+  confirmations: 1 # confirmations required by transactions
+  randomShuffle: false # true - order of BPs is random, false - order of BPs is determined according to travelling salesman
+  consensusOnOrchestrator: true # recommended for fast block rates and coordinators without time synchronization
+  #  peers: # missing entries will be filled with default values of the next section
+
+
+
+########################################################################################################################
+#
+#   SELECTION & DEFAULTS
+#
+########################################################################################################################
+
+networkType: scaleFree # random | scaleFree | explicit
+
+blockchainType: dPoSBFT # proofBased | dPoSBFT
+blockchainDefaults:
+  miningRate: 2 # Blocks per second in the entire network (distributed between peers according to their individual shares)
+  txRate: 2 # Transactions per second in the entire network (distributed between peers according to their individual shares)
+  txSize: 250 # bytes
+  txFees: [{fee: 3, share: 1}] # defines the share of transactions with different fees created by each peer by default
+  txDistribution: poisson # constant, uniform = time distribution of transactions created by each peer
+  txPeerDistribution: # distribution of amount of transactions created between all peers (constant = all peers create the same amount of transactions on average)
+    type: constant # constant, uniform, exponential
+    mean: 1 # ignored for type: uniform
+  blockSize: 6500 # transactions fitting into one block
+  forkResolution: LCR # LCR | GHOST, strategy of determining tips (parents of new blocks)
+  tieResolution: random # random | first, in case of multiple tips, break ties randomly or choose the block that was created first
+  ghostDepth: 8 # depth of the blockchain to backtrack during GHOST fork resolution, ignored for LCR fork resolution
+  txPoolSize: 200000 # number of transactions fitting into pool without being included in the blockchain. Further Tx are rejected
+  verificationTime: 100 # verification time of received blocks in microseconds
+  blocks: 1000 # blocks until simulation end
+  pushBlocks: true # true - propagate received blocks instantly instead of only sending on request (latency vs bandwidth)
+  simulateFullBlocks: false # true - add artificial delay when sending blocks. Useful for throughput/latency experiments with limited hardware testbed
+
+
+
+########################################################################################################################
+#
+#   MISC.
+#
+########################################################################################################################
+
+logLevel: CONFIG # ALL | CONFIG | FINE | FINER | FINEST | INFO | OFF | SEVERE | WARNING
+networkDelay: 5000 # time to wait for synchronization during startup/shutdown
+skipBlocks: 2 # first [skipBlocks] blocks are discarded in measurements
+runs: 2 # number of runs of this config file
+manualStart: false # true - orchestrator is started manually by newline in terminal, false - orchestrator starts autonomously after [networkDelay]ms
+exportAsJson: false # export results as JSON (as opposed to txt format)
+renderBlockchain: false # Use Graphviz to create svg of the blockchain created during this run ([timestamp]_[configFileName]_bc.svg")
+                        # Only recommended small blockchains
+renderGraph: false # Use Graphviz to create svg of the network emulated during this run ([timestamp]_[configFileName]_graph.svg")
+                   # Only recommended for small networks

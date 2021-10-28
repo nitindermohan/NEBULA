@@ -1,0 +1,125 @@
+########################################################################################################################
+#
+#   COORDINATORS
+#
+#   List of addresses <ip:port> and computing power shares of physical machines hosting the coordinators.
+#
+########################################################################################################################
+
+coordinators:
+  - address: 127.0.0.1:5151
+    computingShare: 1
+#  - address: 192.168.0.124:5151
+#    computingShare: 65
+#  - address: 192.168.0.179:5152
+#    computingShare: 44
+#  - address: 192.168.0.154:5153
+#    computingShare: 39
+
+
+
+
+
+########################################################################################################################
+#
+#   NETWORK STRATEGIES
+#
+#   Defines the number of peers and their connections in the P2P network. Peers in the network are identified by their
+#   Ids (0 to n-1).
+#
+#   - RANDOM: creates a P2P network according to a random graph with the given number of nodes,
+#             edge density and mean edge latency (application level).
+#
+#   - EXPLICIT: creates a P2P network according to the given adjacency list. The resulting graph must be connected
+#               and undirected (only one entry per edge allowed). The given adjacency list must contain entries for
+#               all node ids from 0 to n-1 where n is the number of nodes.
+#
+#   - SCALEFREE: creates a scale-free P2P network according to the Barabási–Albert model.
+#
+########################################################################################################################
+
+
+random:
+  nodes: 500  # number of peers in the network
+  density: 0.01 # density of edges. As the graph has to be connected, the actual density will be: max(2/nodes, density)
+  latency: 63000 # latency mean
+  perEdge: false # true - latency will be applied to each edge, false - latency is the mean propagation delay in the entire network
+  bandwidth: 2000 # MB/s
+
+explicit:
+  bandwidth: 2000 # MB/s
+  fileName: cloudGraph.txt
+  peers: []
+
+scaleFree:
+  nodes: 600  # number of peers in the network
+  m: 4 # number of edges new nodes are added with initially
+  latency: 850000 # latency mean
+  perEdge: false # true - latency will be applied to each edge, false - latency is the mean propagation delay in the entire network
+  bandwidth: 2000 # MB/s
+
+
+
+
+########################################################################################################################
+#
+#   BLOCKCHAIN STRATEGIES
+#
+########################################################################################################################
+
+
+proofBased:
+  confirmations: 6 # blocks
+  miningDistribution: # distribution of blocks created between all peers (constant = all peers create the same amount of blocks on average)
+    type: constant # constant, uniform, exponential
+    mean: 1 # ignored for type: uniform
+
+  peers: []# missing entries will be filled with default values of the next section
+
+
+########################################################################################################################
+#
+#   SELECTION & DEFAULTS
+#
+########################################################################################################################
+
+networkType: scaleFree # random | scaleFree | explicit
+
+blockchainType: proofBased # proofBased | dPoSBFT
+blockchainDefaults:
+  miningRate: 0.0016666666666667 # Blocks per second in the entire network (distributed between peers according to their individual shares)
+  txRate: 3.85 # Transactions per second in the entire network (distributed between peers according to their individual shares)
+  txSize: 200 # bytes
+  txFees: [{fee: 3, share: 1}] # defines the share of transactions with different fees created by each peer by default
+  txDistribution: poisson # constant, uniform = time distribution of transactions created by each peer
+  txPeerDistribution: # distribution of amount of transactions created between all peers (constant = all peers create the same amount of transactions on average)
+    type: constant # constant, uniform, exponential
+    mean: 1 # ignored for type: uniform
+  blockSize: 31 # transactions fitting into one block
+  forkResolution: LCR # LCR | GHOST, strategy of determining tips (parents of new blocks)
+  tieResolution: random # random | first, in case of multiple tips, break ties randomly or choose the block that was created first
+  ghostDepth: 8 # depth of the blockchain to backtrack during GHOST fork resolution, ignored for LCR fork resolution
+  txPoolSize: 200000 # number of transactions fitting into pool without being included in the blockchain. Further Tx are rejected
+  verificationTime: 100 # verification time of received blocks in microseconds
+  blocks: 250 # blocks until simulation end
+  pushBlocks: false # true - propagate received blocks instantly instead of only sending on request (latency vs bandwidth)
+  simulateFullBlocks: true # true - add artificial delay when sending blocks. Useful for throughput/latency experiments with limited hardware testbed
+
+
+
+########################################################################################################################
+#
+#   MISC.
+#
+########################################################################################################################
+
+logLevel: CONFIG
+networkDelay: 5000 # time to wait for synchronization during startup/shutdown
+skipBlocks: 2 # first [skipBlocks] blocks are discarded in measurements
+runs: 4 # number of runs of this config file
+manualStart: false # true - orchestrator is started manually by newline in terminal, false - orchestrator starts autonomously after [networkDelay]ms
+exportAsJson: false # export results as JSON (as opposed to txt format)
+renderBlockchain: false # Use Graphviz to create svg of the blockchain created during this run ([timestamp]_[configFileName]_bc.svg")
+                        # Only recommended small blockchains
+renderGraph: false # Use Graphviz to create svg of the network emulated during this run ([timestamp]_[configFileName]_graph.svg")
+                   # Only recommended for small networks
