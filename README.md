@@ -5,6 +5,17 @@ Emulated network peers are hosted on coordinator VMs in an n-to-m fashion, allow
 By configuring parameters starting with network size and topology, to intricate blockchain strategies, experiments are conducted in an autonomous and repeatable fashion.
 During execution, measurements about confirmation latencies, stale blocks and more are made, in order to determine performance and efficiency of the emulated blockchain platform.
 
+---
+
+If you use NEBULA for your research, please cite our paper: 
+
+Leo Eichhorn, Tanya Shreedhar, Aleksandr Zavodovski, and Nitinder Mohan. 2021. Distributed Ledgers for Distributed Edge: Are we there yet?. In
+*Interdisciplinary Workshop on (de) Centralization in the Internet (IWCI’21),
+December 7, 2021, Virtual Event, Germany.* ACM, New York, NY, USA, 8 pages.
+https://doi.org/10.1145/3488663.3493687
+
+---
+
 ## Requirements
 - Java 11+
 - Maven 3.6.2+
