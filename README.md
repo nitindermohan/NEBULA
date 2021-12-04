@@ -9,10 +9,12 @@ During execution, measurements about confirmation latencies, stale blocks and mo
 
 If you use NEBULA for your research, please cite our paper: 
 
+```
 Leo Eichhorn, Tanya Shreedhar, Aleksandr Zavodovski, and Nitinder Mohan. 2021. Distributed Ledgers for Distributed Edge: Are we there yet?. In
 *Interdisciplinary Workshop on (de) Centralization in the Internet (IWCI’21),
 December 7, 2021, Virtual Event, Germany.* ACM, New York, NY, USA, 8 pages.
 https://doi.org/10.1145/3488663.3493687
+```
 
 ---
 
